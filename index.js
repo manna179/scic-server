@@ -49,19 +49,47 @@ async function run() {
       const tasks = await taskCollection.find().toArray();
       res.send(tasks);
     });
-   
+
     app.get("/tasks/:id", async (req, res) => {
       const id = req.params.id;
-      const query ={_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) };
       const task = await taskCollection.findOne(query);
       res.send(task);
     });
     app.delete("/tasks/:id", async (req, res) => {
-      const id = req.params.id
-      const query = {_id:new ObjectId(id)};
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
       const result = await taskCollection.deleteOne(query);
       res.send(result);
     });
+    app.put("/tasks/:id", async (req, res) => {
+      try {
+        const { id } = req.params;
+        const updatedTask = req.body;
+    
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: "Invalid Task ID" });
+        }
+    
+        const result = await taskCollection.updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $set: updatedTask,
+          }
+        );
+    
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: "Task not found" });
+        }
+    
+        res.json({ message: "Task updated successfully" });
+      } catch (error) {
+        console.error("Update error:", error);  // Log the error
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
+    
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
